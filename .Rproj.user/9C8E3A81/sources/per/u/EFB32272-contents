@@ -1,0 +1,44 @@
+## 1. Boxplot di BCEA
+n_pre_stimolazione <- sum(!is.na(dati_alessia$`BCEA 95% (°xcm2) PRE-STIMOLAZIONE`)) / 2
+n_t1 <- sum(!is.na(dati_alessia$`BCEA 95% (T1)`)) / 2
+n_t2 <- sum(!is.na(dati_alessia$`BCEA 95% (T2)`)) / 2
+n_t3 <- sum(!is.na(dati_alessia$`BCEA 95% (T3)`)) / 2
+n_t4 <- sum(!is.na(dati_alessia$`BCEA 95% (T4)`)) / 2
+n_t5 <- sum(!is.na(dati_alessia$`BCEA 95% (T5)`)) / 2
+n_t6 <- sum(!is.na(dati_alessia$`BCEA 95% (T6)`)) / 2
+colori <- colorRampPalette(c("skyblue", "salmon"))(7)
+boxplot(
+  dati_alessia$`SENSIBILITÀ RETINICA MEDIA (dB) PRE-STIMOLAZIONE`,
+  dati_alessia$`SENSIBILITÀ RETINICA MEDIA (T6)`,
+  names = c("PRE-STIMOLAZIONE","T6"),
+  col = colori,
+  main = "Confron",
+  ylab = "",xlab = "Tempo")
+text(x = 1, y =250, labels = paste("N:", n_pre_stimolazione), pos = 3)
+text(x = 2, y = 250, labels = paste("N:", n_t6), pos = 3)
+
+mean(dati_alessia$`SENSIBILITÀ RETINICA MEDIA (dB) PRE-STIMOLAZIONE`)
+mean(na.omit(dati_alessia$`SENSIBILITÀ RETINICA MEDIA (T6)`))
+
+
+## 2. T Test
+dati_alessia$`SENSIBILITÀ RETINICA MEDIA (T6)`
+dati_long <- melt(dati_alessia[, c(
+  "SENSIBILITÀ RETINICA MEDIA (dB) PRE-STIMOLAZIONE",
+  "SENSIBILITÀ RETINICA MEDIA (T6)"
+)], variable.name = "Tempo", value.name = "Valori")
+dati_long <- na.omit(dati_long)
+risultati_significativi <- list()
+tempi <- unique(dati_long$Tempo)
+for (i in 1:(length(tempi) - 1)) {
+  for (j in (i + 1):length(tempi)) {
+    t_test <- t.test(Valori ~ Tempo, data = dati_long[dati_long$Tempo %in% c(tempi[i], tempi[j]), ])
+    if (t_test$p.value < 0.4) {
+      risultati_significativi[[paste(tempi[i], tempi[j], sep = " vs ")]] <- t_test$p.value
+    }
+  }
+}
+risultati_significativi
+
+
+t.test(dati_alessia$`SENSIBILITÀ RETINICA MEDIA (dB) PRE-STIMOLAZIONE`,dati_alessia$`SENSIBILITÀ RETINICA MEDIA (T6)`)

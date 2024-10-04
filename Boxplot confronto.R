@@ -1,0 +1,41 @@
+library(ggplot2)
+library(readxl)
+library(tidyr)
+library(dplyr)  # Carica il pacchetto dplyr per usare rename()
+
+studente <- 'domenica'
+dati_domenica <- read_excel(paste0("Data/dati_", studente, ".xlsx"))
+
+# Modifica dei nomi delle variabili
+dati_domenica <- dati_domenica %>%
+  rename(
+    `BCEA 95%` = BCEA,
+    `Sensibilità retinica media` = `SENS RETINICA MEDIA`,
+    `Fuji` = FUJI,
+    `Acuità visiva per lontano` = AVpl
+  )
+
+# Aprire un PDF per salvare i boxplot su pagine diverse
+pdf(paste0("Plots/boxplot_confronto_", studente, ".pdf"))
+
+# Creare i boxplot per ogni variabile con i nuovi nomi
+variabili <- c("BCEA 95%", "Sensibilità retinica media", "Fuji", "Acuità visiva per lontano")
+
+for (var in variabili) {
+  plot <- ggplot(dati_domenica, aes(x = factor(T), y = .data[[var]], fill = factor(T))) +
+    geom_boxplot() +
+    labs(title = paste0("Boxplot - ", var), x = NULL, y = NULL) +  # Rimuove le etichette degli assi
+    scale_fill_manual(values = c("0" = "#4F81BD", "6" = "#C0504D"), 
+                      labels = c("Pre trattamento", "Post 6° ciclo di trattamenti")) +
+    theme_minimal() +
+    theme(legend.position = "none")  # Rimuove la legenda se non necessaria
+  
+  # Cambiare le etichette degli assi
+  plot <- plot + 
+    scale_x_discrete(labels = c("0" = "Pre trattamento", "6" = "Post 6° ciclo di trattamenti"))
+  
+  print(plot)  # Stampa il plot nella pagina corrente del PDF
+}
+
+# Chiudere il file PDF
+dev.off()

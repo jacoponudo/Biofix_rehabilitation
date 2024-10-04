@@ -1,0 +1,42 @@
+library(ggplot2)
+library(readr)
+library(reshape2)
+library(viridis)
+
+# Carica i dati
+dati_alessia <- read_csv("Data/dati_alessia.csv")
+
+# Crea il data frame con i dati di interesse (senza separare OD e OS)
+dati_lines <- data.frame(
+  PRE_STIMOLAZIONE = dati_alessia$`Fuji 2° centrali  PRE- STIMOLAZIONE `,
+  T1 = dati_alessia$`Fuji 2° centrali % (T1)`,
+  T2 = dati_alessia$`Fuji 2° centrali % (T2)`,
+  T3 = dati_alessia$`Fuji 2° centrali % (T3)`,
+  T4 = dati_alessia$`Fuji 2° centrali % (T4)`,
+  T5 = dati_alessia$` Fuji 2° centrali % (T5)`,
+  T6 = dati_alessia$` Fuji 2° centrali % (T6)`,
+  PAZIENTE = dati_alessia$,
+  OCCHIO = dati_alessia$OCCHIO  # La variabile OCCHIO è già nel dataset
+)
+
+# Convertiamo il dataframe in formato lungo
+dati_long <- melt(dati_lines, id.vars = c("PAZIENTE", "OCCHIO"), 
+                  variable.name = "Trattamento", value.name = "Fuji")
+
+# Trasforma "Trattamento" in un fattore ordinato
+dati_long$Trattamento <- factor(dati_long$Trattamento, 
+                                levels = c("PRE_STIMOLAZIONE", "T1", "T2", "T3", "T4", "T5", "T6"),
+                                ordered = TRUE)
+
+# Creiamo un grafico a linee per OD e OS per ciascun paziente
+ggplot(dati_long, aes(x = Trattamento, y = Fuji, group = interaction(PAZIENTE, OCCHIO), 
+                      color = as.factor(PAZIENTE), linetype = OCCHIO)) +
+  geom_line() +
+  scale_color_viridis_d() +  
+  labs(title = "Serie temporali di Fuji 2° per OCCHIO OD e OS per ciascun paziente",
+       x = "Trattamento (Tempo)",
+       y = "Fuji 2°",
+       color = "Paziente",
+       linetype = "Occhio") +
+  theme_minimal() +
+  theme(legend.position = "right")

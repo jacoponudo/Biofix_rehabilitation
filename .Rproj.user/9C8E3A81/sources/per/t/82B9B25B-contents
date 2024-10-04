@@ -1,0 +1,73 @@
+library(ggplot2)
+library(reshape2)
+library(viridis)
+
+data <- read_csv("Data/dati_benedetta.csv")
+View(data)
+colnames(data)
+# Considerando tutti gli utenti 
+valori <- list(
+  `PRE-STIMOLAZIONE` = data$`SENSIBILITÀ RETINICA MEDIA (dB) PRE-STIMOLAZIONE`,
+  `T3` = data$`SENSIBILITÀ RETINICA MEDIA (T3)`
+)
+boxplot(valori,
+        main = "Confronto della Sensibilità Retinica Media",
+        xlab = "Ciclo Trattamenti",
+        ylab = "Valore (dB)",
+        col = viridis(2))
+t_test_result <- t.test(data$`SENSIBILITÀ RETINICA MEDIA (dB) PRE-STIMOLAZIONE`, data$`SENSIBILITÀ RETINICA MEDIA (T3)`)
+t_test_result
+
+# Considerando solo gli utenti con T6 
+df = na.omit(data)
+valori <- list(
+  `PRE-STIMOLAZIONE` = df$`SENSIBILITÀ RETINICA MEDIA (dB) PRE-STIMOLAZIONE`,
+  `T6` = df$`SENSIBILITÀ RETINICA MEDIA (T6)`
+)
+boxplot(valori,
+        main = "Confronto della Sensibilità Retinica Media",
+        xlab = "Tipo di Misura",
+        ylab = "Valore (dB)",
+        col = viridis(2))
+t_test_result <- t.test(df$`SENSIBILITÀ RETINICA MEDIA (dB) PRE-STIMOLAZIONE`, 
+                        df$`SENSIBILITÀ RETINICA MEDIA (T6)`)
+t_test_result
+
+# Fai i boxplot per ogni T da 1 a 6
+valori_tempo <- list(
+  `PRE-STIMOLAZIONE` = df$`SENSIBILITÀ RETINICA MEDIA (dB) PRE-STIMOLAZIONE`,
+  `T1` = df$`SENSIBILITÀ RETINICA MEDIA (T1)`,
+  `T2` = df$`SENSIBILITÀ RETINICA MEDIA (T2)`,
+  `T3` = df$`SENSIBILITÀ RETINICA MEDIA (T3)`,
+  `T4` = df$`SENSIBILITÀ RETINICA MEDIA (T4)`,
+  `T5` = df$`SENSIBILITÀ RETINICA MEDIA (T5)`,
+  `T6` = df$`SENSIBILITÀ RETINICA MEDIA (T6)`
+)
+boxplot(valori_tempo,
+        main = "Confronto della Sensibilità Retinica Media",
+        xlab = "Tipo di Misura",
+        ylab = "Valore (dB)",
+        col = viridis(7))
+
+# Esegui T-test e filtra solo i risultati significativi
+significant_results <- lapply(1:6, function(i) {
+  test_result <- t.test(df$`SENSIBILITÀ RETINICA MEDIA (dB) PRE-STIMOLAZIONE`, 
+                        df[[paste0("SENSIBILITÀ RETINICA MEDIA (T", i, ")")]])
+  if (test_result$p.value < 0.1) {
+    return(list(
+      Test = "T-test",
+      Variabili = c("PRE-STIMOLAZIONE", paste0("T", i)),
+      p.value = test_result$p.value,
+      statistic = test_result$statistic
+    ))
+  } else {
+    return(NULL)
+  }
+})
+significant_results <- Filter(Negate(is.null), significant_results)
+for (result in significant_results) {
+  cat("Test:", result$Test, "\n")
+  cat("Confronto tra:", result$Variabili[1], "e", result$Variabili[2], "\n")
+  cat("p-value:", result$p.value, "\n")
+  cat("Statistica del test:", result$statistic, "\n\n")
+}
